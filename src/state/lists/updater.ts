@@ -1,5 +1,5 @@
 import { getVersionUpgrade, minVersionBump, VersionUpgrade } from '@uniswap/token-lists'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useActiveWeb3React } from '../../hooks'
 import { useFetchTokenListCallback, useFetchMergeTokenListCallback } from '../../hooks/useFetchListCallback'
@@ -9,11 +9,22 @@ import useInterval from '../../hooks/useInterval'
 import { addPopup } from '../application/actions'
 import { AppDispatch, AppState } from '../index'
 import { acceptListUpdate } from './actions'
+import { getStorageWithCache, setStorageWithCache, STORAGE_CACHE_MINUTE } from '../../utils/storage'
 
 // import config from '../../config'
 
 export default function Updater(): null {
-  const { library, chainId } = useActiveWeb3React()
+  const { library, chainId: activeChainId, active } = useActiveWeb3React()
+  const chainId = useMemo(() => {
+    if (activeChainId) {
+      active && setStorageWithCache('chainId', activeChainId)
+      return activeChainId
+    }
+    else {
+      const cacheChainId = getStorageWithCache('chainId', STORAGE_CACHE_MINUTE * 30)
+      return cacheChainId || activeChainId;
+    }
+  }, [activeChainId, active])
   const dispatch = useDispatch<AppDispatch>()
   const lists = useSelector<AppState, AppState['lists']['byUrl']>(state => state.lists.byUrl)
 
