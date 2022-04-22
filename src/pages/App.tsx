@@ -39,6 +39,37 @@ import QueryNonApprove from '../components/NonApprove/queryIsNeedNonApprove'
 import config from '../config'
 import farmlist from '../config/farmlist'
 
+import { HashRouter } from 'react-router-dom'
+import { createWeb3ReactRoot, Web3ReactProvider } from '@web3-react/core'
+import { NetworkContextName } from '../constants'
+import getLibrary from '../utils/getLibrary'
+
+import { WalletProvider, NetworkInfo } from '@terra-money/wallet-provider'
+import { Updaters } from '../state/updaters'
+
+const Web3ProviderNetwork = createWeb3ReactRoot(NetworkContextName)
+
+if ('ethereum' in window) {
+  ;(window.ethereum as any).autoRefreshOnNetworkChange = false
+}
+
+const mainnet = {
+  name: 'mainnet',
+  chainID: 'columbus-4',
+  lcd: 'https://lcd.terra.dev',
+};
+
+const testnet = {
+  name: 'testnet',
+  chainID: 'tequila-0004',
+  lcd: 'https://tequila-lcd.terra.dev',
+};
+
+const walletConnectChainIds: Record<number, NetworkInfo> = {
+  0: testnet,
+  1: mainnet,
+}
+
 // import '../hooks/xrp'
 
 // console.log(Sdk)
@@ -136,7 +167,7 @@ const Marginer = styled.div`
 //   return <AddressClaimModal isOpen={open} onDismiss={toggle} />
 // }
 
-export default function App() {
+export function App() {
   let initUrl = '/dashboard'
   if (config.getCurConfigInfo().isOpenRouter) {
     initUrl = '/v1/router'
@@ -200,8 +231,6 @@ export default function App() {
                   )
                 })
               }
-
-              
               <Redirect to={{ pathname: initUrl }} />
             </Switch>
           </Web3ReactManager>
@@ -213,4 +242,20 @@ export default function App() {
       </AppWrapper>
     </Suspense>
   )
+}
+
+export default function AppContainer() {
+  return (<WalletProvider
+    defaultNetwork={mainnet}
+    walletConnectChainIds={walletConnectChainIds}
+  >
+    <Web3ReactProvider getLibrary={getLibrary}>
+      <Web3ProviderNetwork getLibrary={getLibrary}>
+        <Updaters />
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </Web3ProviderNetwork>
+    </Web3ReactProvider>
+  </WalletProvider>)
 }
