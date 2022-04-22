@@ -580,6 +580,7 @@ export default function PoolLists ({
                   symbol={config.getBaseCoin(item?.symbol, chainId)}
                   logoUrl={item.logoUrl}
                   size={'1.625rem'}
+                  isLazy={ index > 10 }
                 ></TokenLogo>
               </TokenTableLogo>
               <TokenNameBox>
