@@ -30,10 +30,10 @@ export default class LazyloadService {
   }
 
   // 创建元素观察者
-  static createElementObserve(el?: HTMLElement, options: IntersectionObserverInit = {}): LazyloadService {
+  static createElementObserve(el?: HTMLElement | null, options: IntersectionObserverInit = {}): LazyloadService {
     const service = new LazyloadService();
     service.isRoot = false;
-    if (el) {
+    if (el || el === null) {
       service.connect(el, options);
     }
     return service;
@@ -66,7 +66,7 @@ export default class LazyloadService {
   }
 
   // 创建观察对象
-  createObserve(element?: HTMLElement, setOptions: IntersectionObserverInit = {}) {
+  createObserve(element?: HTMLElement | null, setOptions: IntersectionObserverInit = {}) {
     const observeItem = this.observeData as ObserveData;
     const options: any = { rootMargin: '50px', ...setOptions };
     if (element) {
@@ -94,7 +94,7 @@ export default class LazyloadService {
   }
 
   // 连接到对象
-  connect(el: HTMLElement, options: IntersectionObserverInit = {}) {
+  connect(el: HTMLElement | null, options: IntersectionObserverInit = {}) {
     const observe = this.createObserve(el, options);
     if (observe) {
       if (this.waitCallbacks.length) {
