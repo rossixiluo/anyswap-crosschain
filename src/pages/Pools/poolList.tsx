@@ -19,7 +19,7 @@ import AppBody from '../AppBody'
 import {getGroupTotalsupply} from '../../utils/bridge/getBalanceV2'
 import {thousandBit, bigToSmallSort, fromWei} from '../../utils/tools/tools'
 import { LazyList } from '../../components/Lazyload/LazyList'
-import { TaskQueueService } from '../../components/TaskQueue/TaskQueueService';
+import { TaskQueueService } from '../../components/TaskQueue/TaskQueueService'
 
 import {
   DBTablesDiv,
@@ -207,7 +207,7 @@ export default function PoolLists ({
 
   const taskQueueService = useMemo(() => {
     return new TaskQueueService();
-  }, []);
+  }, [])
 
   useEffect(() => {
     return () => {

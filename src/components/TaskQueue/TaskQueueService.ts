@@ -1,3 +1,8 @@
+type TaskItem = {
+  id: string | number;
+  task: () => Promise<any>;
+}
+
 export class TaskQueueService {
   waitList: any[] = [];
   resultHash: any = {};
@@ -5,25 +10,24 @@ export class TaskQueueService {
   cb: any = null;
   cancel: any = null;
   isBatch = 0;
+  // task is stop
   outData = false;
+  isTask = false;
 
-  addTask(task: any) {
+  addTask(task: TaskItem) {
     this.waitList.push(task);
   }
-
-  start<T = any[]>(threads = 5) {
+  start<T = any>(threads = 5) {
     this.next(threads);
-    if (!this.isBatch) {
-      return new Promise<T>((resolve, reject) => {
-        this.cb = resolve;
-        this.cancel = reject;
-      })
-    }
-    else {
+    // batch task no return promise
+    if (this.isBatch) {
       return null;
     }
+    return new Promise<T>((resolve, reject) => {
+      this.cb = resolve;
+      this.cancel = reject;
+    });
   }
-
   next(threads: number) {
     const tasks: any[] = [];
     const ids: any[] = [];
@@ -59,7 +63,7 @@ export class TaskQueueService {
       }
     });
   }
-
+  // call success
   done() {
     const { cb, resultHash, isBatch } = this;
     this.cb = null;
@@ -74,10 +78,15 @@ export class TaskQueueService {
     }
     return resultHash;
   }
-
+  // call failure
   stop() {
     const { cancel, cb, resultHash, isBatch } = this;
     this.cb = null;
+    if (this.isTask) {
+      Object.keys(resultHash).map(
+        (key) => resultHash[key].reject(new Error("stop"))
+      );
+    }
     this.resultHash = {};
     this.resultKey = [];
     if (isBatch) {
@@ -91,13 +100,11 @@ export class TaskQueueService {
     this.waitList = [];
     return resultHash;
   }
-
-  startBatch(batch: number, threads: number, cb: Function) {
+  startBatch<T = any>(batch: number, threads: number, cb: (status: string, data: T)=> void) {
     this.isBatch = batch;
     this.cb = cb;
     this.start(threads);
   }
-
   nextBatch(threads: number) {
     const { waitList } = this;
     if (waitList.length) {
@@ -109,5 +116,23 @@ export class TaskQueueService {
     else {
       this.done();
     }
+  }
+  runTask(task: () => Promise<any>, mark?: any) {
+    const id: any = mark || parseInt((Math.random() * 100) as any);
+    this.isTask = true;
+    return new Promise((resolve: Function, reject: Function) => {
+      this.resultHash[id] = { resolve, reject };
+      task().then((res: any) => {
+        if (!this.outData) {
+          delete this.resultHash[id];
+          resolve(res);
+        }
+      }).catch((e) => {
+        if (!this.outData) {
+          delete this.resultHash[id];
+          reject(e);
+        }
+      })
+    })
   }
 }
