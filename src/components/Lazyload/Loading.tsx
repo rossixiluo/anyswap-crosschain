@@ -6,6 +6,8 @@ const Tips = styled.div`
   line-height: 56px;
   padding-top: 120px;
   text-align: center;
+  font-size: 16px;
+  font-weight: 600;
 `
 
 const Loading = () => {
