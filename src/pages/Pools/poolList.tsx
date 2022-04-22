@@ -597,12 +597,12 @@ export default function PoolLists ({
                 item.destChains && Object.keys(item.destChains).length > 0 ? (
                   <>
                     {
-                      Object.keys(item.destChains).map((chainID, index) => {
+                      Object.keys(item.destChains).map((chainID, logoIndex) => {
                       // chainList.map((chainID, index) => {
                         // if (index >= 2) return ''
                         return (
-                          <ChainLogoBox key={index} title={config.getCurChainInfo(chainID).symbol}>
-                            <TokenLogo symbol={config.getCurChainInfo(chainID).networkLogo ?? config.getCurChainInfo(chainID).symbol} size={'20px'}></TokenLogo>
+                          <ChainLogoBox key={logoIndex} title={config.getCurChainInfo(chainID).symbol}>
+                            <TokenLogo isLazy={ index > 10 } symbol={config.getCurChainInfo(chainID).networkLogo ?? config.getCurChainInfo(chainID).symbol} size={'20px'}></TokenLogo>
                           </ChainLogoBox>
                         )
                       })

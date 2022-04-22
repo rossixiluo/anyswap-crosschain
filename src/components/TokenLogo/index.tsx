@@ -6,6 +6,7 @@ import { useActiveWeb3React } from '../../hooks'
 import config from '../../config'
 
 import initPath from '../../assets/images/question.svg'
+import { LazyImage } from '../../components/Lazyload/LazyImage'
 
 const Image = styled.img<{ size?: any }>`
   width: ${({ size }) => size};
@@ -15,6 +16,14 @@ const Image = styled.img<{ size?: any }>`
   background-color: white;
   border-radius: ${({ size }) => size};
 `
+
+const imageStyle = (size: any) => {
+  return {
+    width: size,
+    height: size,
+    borderRadius: size
+  }
+}
 
 // const initPath = require('../../assets/images/question.svg')
 
@@ -51,12 +60,14 @@ export default function TokenLogo({
   isAny = true,
   style,
   logoUrl,
+  isLazy,
   ...rest
 }: {
   symbol?: any
   size?: any
   style?: React.CSSProperties
   logoUrl?: any
+  isLazy?: boolean
   isAny?: any
 }) {
   const { chainId } = useActiveWeb3React()
@@ -86,5 +97,7 @@ export default function TokenLogo({
   }
   // console.log(logoUrl)
   // console.log(path)
-  return <Image {...rest} alt={symbol} src={path} size={size} style={style} />
+  return isLazy ? <LazyImage checkUrl={ path } style={ imageStyle(size) }>
+    <Image {...rest} alt={symbol} src={path} size={size} style={style} />
+  </LazyImage> : <Image {...rest} alt={symbol} src={path} size={size} style={style} />
 }
