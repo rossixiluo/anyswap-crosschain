@@ -10,9 +10,8 @@ const Tips = styled.div`
   font-weight: 600;
 `
 
-const Loading = ({ duration }: { duration?: number }) => {
-  duration = duration || 0;
-  const [show, setShow] = useState<boolean>(duration > 0);
+const Loading = ({ duration = -1 }: { duration?: number }) => {
+  const [show, setShow] = useState<boolean>(duration < 0);
 
   useEffect(() => {
     let timeHandler: any;
