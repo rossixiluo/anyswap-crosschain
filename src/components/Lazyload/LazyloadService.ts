@@ -130,7 +130,6 @@ export default class LazyloadService {
       this.waitCallbacks = [];
       this.status = ObserveStatus.Disconnect;
     }
-    console.log('disconnect');
   }
 
   // 订阅事件

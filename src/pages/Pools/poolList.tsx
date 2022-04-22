@@ -19,6 +19,7 @@ import AppBody from '../AppBody'
 import {getGroupTotalsupply} from '../../utils/bridge/getBalanceV2'
 import {thousandBit, bigToSmallSort, fromWei} from '../../utils/tools/tools'
 import { LazyList } from '../../components/Lazyload/LazyList'
+import { TaskQueueService } from '../../components/TaskQueue/TaskQueueService';
 
 import {
   DBTablesDiv,
@@ -204,20 +205,38 @@ export default function PoolLists ({
   // const [count, setCount] = useState<number>(0)
   const [intervalCount, setIntervalCount] = useState<number>(0)
 
+  const taskQueueService = useMemo(() => {
+    return new TaskQueueService();
+  }, []);
 
+  useEffect(() => {
+    return () => {
+      if (taskQueueService) {
+        taskQueueService.stop();
+      }
+    }
+  }, [])
 
   async function getOutChainInfo (destList:any) {
-    const list:any = {}
     // console.log(destList)
+    const addTask = (id: string, tokenList: any, account: any) => taskQueueService.addTask({
+      id, task: () => getGroupTotalsupply(tokenList, id, account)
+    })
     for (const chainID in destList) {
-      list[chainID] = await getGroupTotalsupply(destList[chainID], chainID, evmAccount)
+      // list[chainID] = await getGroupTotalsupply(destList[chainID], chainID, evmAccount)
+      addTask(chainID, destList[chainID], evmAccount);
     }
-    setPoolData(list)
-    // console.log(list)
-    if (intervalFN) clearTimeout(intervalFN)
-    intervalFN = setTimeout(() => {
-      setIntervalCount(intervalCount + 1)
-    }, 1000 * 10)
+    try {
+      const list = await taskQueueService.start(4);
+      setPoolData(list)
+      // console.log(list)
+      if (intervalFN) clearTimeout(intervalFN)
+      intervalFN = setTimeout(() => {
+        setIntervalCount(intervalCount + 1)
+      }, 1000 * 10)
+    }
+    catch(e) {
+    }
     // return list
   }
 
