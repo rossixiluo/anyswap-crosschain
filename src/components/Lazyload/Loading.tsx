@@ -26,7 +26,7 @@ const Loading = ({ duration }: { duration?: number }) => {
       }
     }
     return cancel;
-  })
+  }, [])
 
   const { t } = useTranslation();
   return show ? <Tips>{ t('Loading') }...</Tips> : null;

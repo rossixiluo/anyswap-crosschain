@@ -15,6 +15,7 @@ import {useBridgeCallback, useBridgeUnderlyingCallback, useBridgeNativeCallback,
 // import { WrapType } from '../../hooks/useWrapCallback'
 import { useApproveCallback, ApprovalState } from '../../hooks/useApproveCallback'
 import { useLocalToken } from '../../hooks/Tokens'
+import { Web3ReactConnectContext } from '../Web3ReactManager'
 
 import SelectCurrencyInputPanel from '../CurrencySelect/selectCurrency'
 import { AutoColumn } from '../Column'
@@ -110,6 +111,8 @@ export default function CrossChain({
 
   let initBridgeToken:any = getParams('bridgetoken') ? getParams('bridgetoken') : ''
   initBridgeToken = initBridgeToken ? initBridgeToken.toLowerCase() : ''
+
+  const { triedEager: isLoaded } = useContext(Web3ReactConnectContext);
 
   const destConfig = useMemo(() => {
     if (selectDestCurrency) {
@@ -842,7 +845,7 @@ export default function CrossChain({
           ) : ''
         }
         {
-          (swapType === 'send' && !isNaN(chainId) && destConfig?.type != 'swapin') || (isNaN(selectChain) && destConfig?.type === 'swapout') || isNaN(chainId) ? (
+          (swapType === 'send' && !isNaN(chainId) && destConfig?.type != 'swapin') || (isNaN(selectChain) && destConfig?.type === 'swapout') || (isNaN(chainId) && isLoaded) ? (
             <AddressInputPanel id="recipient" value={recipient} label={t('Recipient')} labelTip={'( ' + t('receiveTip') + ' )'} onChange={setRecipient} isValid={false} selectChainId={selectChain} isError={!Boolean(selectChain === ChainId.NAS ? nebulas.Account.isValidAddress(recipient) : isAddress( recipient, selectChain))} />
           ) : ''
         }
@@ -850,7 +853,7 @@ export default function CrossChain({
 
       <Reminder destConfig={destConfig} bridgeType='bridgeAssets' currency={selectCurrency} selectChain={selectChain}/>
 
-      <ErrorTip errorTip={errorTip} />
+      { isLoaded ? <ErrorTip errorTip={errorTip} /> : null }
       {
         config.isStopSystem ? (
           <BottomGrouping>

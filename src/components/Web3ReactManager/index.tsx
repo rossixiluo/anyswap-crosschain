@@ -1,5 +1,5 @@
 // import React, { useState, useEffect } from 'react'
-import React, { useEffect } from 'react'
+import React, { createContext, useEffect } from 'react'
 import { useWeb3React } from '@web3-react/core'
 // import styled from 'styled-components'
 // import { useTranslation } from 'react-i18next'
@@ -19,6 +19,8 @@ import { NetworkContextName } from '../../constants'
 // const Message = styled.h2`
 //   color: ${({ theme }) => theme.secondary1};
 // `
+
+export const Web3ReactConnectContext = createContext<{triedEager: boolean}>({ triedEager: false });
 
 export default function Web3ReactManager({ children }: { children: JSX.Element }) {
   // const { t } = useTranslation()
@@ -52,9 +54,9 @@ export default function Web3ReactManager({ children }: { children: JSX.Element }
   // }, [])
 
   // 在页面加载时，在尝试连接到注入的连接器之前，不要执行任何操作
-  if (!triedEager) {
-    return null
-  }
+  // if (!triedEager) {
+  //   return null
+  // }
 
   // 如果帐户上下文未处于活动状态，并且网络上下文中存在错误，则这是一个无法恢复的错误
   // if (!active && networkError) {
@@ -75,6 +77,8 @@ export default function Web3ReactManager({ children }: { children: JSX.Element }
   // }
 
   return (
-    <>{children}</>
+    <Web3ReactConnectContext.Provider value={ {triedEager} }>
+      {children}
+    </Web3ReactConnectContext.Provider>
     )
 }
