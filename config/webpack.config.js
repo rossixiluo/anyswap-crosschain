@@ -551,6 +551,7 @@ module.exports = function(webpackEnv) {
           {
             inject: false,
             template: paths.appHtml,
+            theme: env.raw.REACT_APP_THEME
           },
           isEnvProduction
             ? {
