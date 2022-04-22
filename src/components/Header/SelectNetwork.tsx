@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useCallback, RefObject, useEffect, createRef } from 'react'
+import React, { useMemo, useState, useRef, useCallback, RefObject, createRef } from 'react'
 // import React, { useState, useEffect } from 'react'
 // import { createBrowserHistory } from 'history'
 import styled from 'styled-components'
@@ -13,7 +13,7 @@ import Loader from '../Loader'
 import Column from '../Column'
 import { RowBetween } from '../Row'
 import { PaddedColumn, SearchInput, Separator } from '../SearchModal/styleds'
-import LazyloadService from '../../components/Lazyload/LazyloadService'
+import { LazyList } from '../../components/Lazyload/LazyList'
 
 // import { useActiveWeb3React } from '../../hooks'
 import {useActiveReact} from '../../hooks/useActiveReact'
@@ -286,7 +286,7 @@ const Input = styled.input`
   }
 `
 
-const Tips = styled.div`
+const Loading = styled.div`
   line-height: 56px;
   text-align: center;
 `
@@ -428,78 +428,43 @@ function ChainListBox ({
   searchQuery: any
   size?: number
 }) {
-  const pageSize = size || 20;
-  const [page, setPage] = useState<number>(1);
-  const boxRef = createRef<any>();
-  const watchRef = createRef<any>();
-  const [lazyloadService, setLazyloadService] = useState<LazyloadService>();
+  const pageSize = size || 20
+  const boxRef = createRef<any>()
+  const watchRef = createRef<any>()
   const { t } = useTranslation()
 
-  useEffect(() => {
-    let service: LazyloadService;
-    if (boxRef.current) {
-      service = LazyloadService.createElementObserve(boxRef.current);
-      setLazyloadService(service);
-    }
-    return () => {
-      if (service) {
-        service.disconnect();
-        setLazyloadService(undefined);
-      }
-    }
-  }, []);
-
-  const [pageCount, isLimit] = useMemo(() => {
-    const count: any = Math.ceil(spportChainArr.length / pageSize) || 1;
-    const limit: any = page >= count;
-    return [count, limit];
-  }, [spportChainArr, pageSize, page]);
-
-  useEffect(() => {
-    let unsubscribe: Function;
-    if (!isLimit && lazyloadService && watchRef.current) {
-      unsubscribe = lazyloadService.subscribe(watchRef.current, (e: any) => {
-        if (e && e.intersectionRatio && page < pageCount) {
-          setPage(page + 1);
+  function List({ records }: { records?: any [] }) {
+    return (<>{
+      records?.map((item:any, index:any) => {
+        if (
+          (searchQuery
+          && (
+            chainInfo[item].name.toLowerCase().indexOf(searchQuery.toLowerCase()) !== -1
+            || chainInfo[item].symbol.toLowerCase().indexOf(searchQuery.toLowerCase()) !== -1
+            || searchQuery.toLowerCase() === item.toString().toLowerCase()
+          ))
+          || !searchQuery
+        ) {
+          return (
+            <OptionCardClickable key={index} className={
+              useChainId?.toString() === item?.toString()  ? 'active' : ''} onClick={() => {openUrl(chainInfo[item])}}>
+              <Option curChainId={item} selectChainId={useChainId}></Option>
+            </OptionCardClickable>
+          )
         }
+        return
       })
     }
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    }
-  }, [lazyloadService, page, pageCount, isLimit]);
-
-  const currentSpportChainArr = useMemo(() => {
-    return spportChainArr ? spportChainArr.slice(0, page * pageSize) : spportChainArr
-  }, [spportChainArr, page, pageSize]);
+    </>);
+  }
 
   return (
     <>
       <NetWorkList ref={ boxRef } style={{height: height}}>
-        {
-          spportChainArr && currentSpportChainArr.map((item:any, index:any) => {
-            if (
-              (searchQuery
-              && (
-                chainInfo[item].name.toLowerCase().indexOf(searchQuery.toLowerCase()) !== -1
-                || chainInfo[item].symbol.toLowerCase().indexOf(searchQuery.toLowerCase()) !== -1
-                || searchQuery.toLowerCase() === item.toString().toLowerCase()
-              ))
-              || !searchQuery
-            ) {
-              return (
-                <OptionCardClickable key={index} className={
-                  useChainId?.toString() === item?.toString()  ? 'active' : ''} onClick={() => {openUrl(chainInfo[item])}}>
-                  <Option curChainId={item} selectChainId={useChainId}></Option>
-                </OptionCardClickable>
-              )
-            }
-            return
-          })
-        }
-        { !isLimit ? <Tips ref={ watchRef }>{ t('Loading') }...</Tips> : null }
+        <LazyList records={ spportChainArr } pageSize={ pageSize }
+          boxRef={ boxRef } watchRef={ watchRef } list={ List }>
+          <Loading ref={ watchRef }>{ t('Loading') }...</Loading>
+        </LazyList>
       </NetWorkList>
     </>
   )

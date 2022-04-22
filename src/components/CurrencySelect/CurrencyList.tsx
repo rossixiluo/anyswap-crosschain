@@ -1,6 +1,6 @@
 import { Currency, CurrencyAmount, currencyEquals, ETHER, Token } from 'anyswap-sdk'
 // import { Currency, CurrencyAmount, ETHER, Token } from 'anyswap-sdk'
-import React, { CSSProperties, useMemo, useState, useEffect, createRef } from 'react'
+import React, { CSSProperties, useMemo, createRef } from 'react'
 import { Text } from 'rebass'
 import styled from 'styled-components'
 import { useTranslation } from 'react-i18next'
@@ -19,7 +19,7 @@ import Loader from '../Loader'
 
 import config from '../../config'
 import {CROSS_BRIDGE_LIST} from '../../config/constant'
-import LazyloadService from '../../components/Lazyload/LazyloadService'
+import { LazyList } from '../../components/Lazyload/LazyList';
 
 function currencyKey(currency: Currency): string {
   return currency instanceof Token ? currency.address : currency === ETHER ? 'ETHER' : ''
@@ -50,7 +50,7 @@ const ListBox = styled.div`
   overflow:auto;
 `
 
-const Tips = styled.div`
+const Loading = styled.div`
   line-height: 56px;
   text-align: center;
 `
@@ -220,81 +220,45 @@ export default function BridgeCurrencyList({
     return arr
   }, [itemData, chainId])
 
-  const pageSize = size || 20;
-  const [page, setPage] = useState<number>(1);
-  const boxRef = createRef<any>();
-  const watchRef = createRef<any>();
-  const [lazyloadService, setLazyloadService] = useState<LazyloadService>();
+  const pageSize = size || 20
+  const boxRef = createRef<any>()
+  const watchRef = createRef<any>()
   const { t } = useTranslation()
 
-
-  useEffect(() => {
-    let service: LazyloadService;
-    if (boxRef.current) {
-      service = LazyloadService.createElementObserve(boxRef.current);
-      setLazyloadService(service);
-    }
-    return () => {
-      if (service) {
-        service.disconnect();
-        setLazyloadService(undefined);
-      }
-    }
-  }, []);
-
-  const [pageCount, isLimit] = useMemo(() => {
-    const count: any = Math.ceil(htmlNodes.length / pageSize) || 1;
-    const limit: any = page >= count;
-    return [count, limit];
-  }, [htmlNodes, pageSize, page]);
-
-  useEffect(() => {
-    let unsubscribe: Function;
-    if (!isLimit && lazyloadService && watchRef.current) {
-      unsubscribe = lazyloadService.subscribe(watchRef.current, (e: any) => {
-        if (e && e.intersectionRatio && page < pageCount) {
-          setPage(page + 1);
-        }
+  function List({ records }: { records?: any [] }) {
+    return (<>{
+      records?.map((item:any, index:any) =>{
+        const currency: any = item
+        // const isSelected = Boolean(selectedCurrency && currencyEquals(selectedCurrency, currency))
+        const otherSelected = Boolean(otherCurrency && currencyEquals(otherCurrency, currency))
+        const isSelected = Boolean(selectedCurrency?.address?.toLowerCase() === currency?.address?.toLowerCase())
+        const handleSelect = () => onCurrencySelect(currency)
+        return (
+          <CurrencyRow
+            style={{margin:'auto'}}
+            currency={currency}
+            isSelected={isSelected}
+            onSelect={handleSelect}
+            otherSelected={otherSelected}
+            key={index}
+            allBalances={allBalances}
+            ETHBalance={ETHBalance}
+            bridgeKey={bridgeKey}
+            selectDestChainId={selectDestChainId}
+          />
+        )
       })
     }
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    }
-  }, [lazyloadService, page, pageCount, isLimit]);
-
-  const currentHtmlNodes = useMemo(() => {
-    return htmlNodes ? htmlNodes.slice(0, page * pageSize) : htmlNodes;
-  }, [htmlNodes, page, pageSize]);
+    </>);
+  }
 
   return (
     <>
       <ListBox ref={ boxRef } style={{height: height}}>
-        {
-          currentHtmlNodes.map((item, index) => {
-            const currency: any = item
-            // const isSelected = Boolean(selectedCurrency && currencyEquals(selectedCurrency, currency))
-            const otherSelected = Boolean(otherCurrency && currencyEquals(otherCurrency, currency))
-            const isSelected = Boolean(selectedCurrency?.address?.toLowerCase() === currency?.address?.toLowerCase())
-            const handleSelect = () => onCurrencySelect(currency)
-            return (
-              <CurrencyRow
-                style={{margin:'auto'}}
-                currency={currency}
-                isSelected={isSelected}
-                onSelect={handleSelect}
-                otherSelected={otherSelected}
-                key={index}
-                allBalances={allBalances}
-                ETHBalance={ETHBalance}
-                bridgeKey={bridgeKey}
-                selectDestChainId={selectDestChainId}
-              />
-            )
-          })
-        }
-        { !isLimit ? <Tips ref={ watchRef }>{ t('Loading') }...</Tips> : null }
+        <LazyList records={ htmlNodes } pageSize={ pageSize }
+          boxRef={ boxRef } watchRef={ watchRef } list={ List }>
+          <Loading ref={ watchRef }>{ t('Loading') }...</Loading>
+        </LazyList>
       </ListBox>
     </>
   )
