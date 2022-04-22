@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -10,9 +10,26 @@ const Tips = styled.div`
   font-weight: 600;
 `
 
-const Loading = () => {
-    const { t } = useTranslation();
-    return <Tips>{ t('Loading') }...</Tips>;
+const Loading = ({ duration }: { duration?: number }) => {
+  duration = duration || 0;
+  const [show, setShow] = useState<boolean>(duration > 0);
+
+  useEffect(() => {
+    let timeHandler: any;
+    let cancel = () => {
+      //
+    };
+    if (duration) {
+      timeHandler = setTimeout(() => setShow(true), duration)
+      cancel = () => {
+        clearTimeout(timeHandler);
+      }
+    }
+    return cancel;
+  })
+
+  const { t } = useTranslation();
+  return show ? <Tips>{ t('Loading') }...</Tips> : null;
 };
 
 export default Loading;
