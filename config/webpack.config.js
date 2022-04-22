@@ -278,6 +278,14 @@ module.exports = function(webpackEnv) {
       splitChunks: {
         chunks: 'all',
         name: false,
+        minSize: 4096,
+        cacheGroups: {
+          common: {
+            test: /@terra-money|@terra-dev|@ethersproject|@walletconnect|@multichain-bridge|bip39|bn.js/,
+            name: "common",
+            priority: 20,
+          }
+        }
       },
       // Keep the runtime chunk separated to enable long term caching
       // https://twitter.com/wSokra/status/969679223278505985
