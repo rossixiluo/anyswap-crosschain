@@ -222,25 +222,11 @@ export default function BridgeCurrencyList({
 
   const pageSize = size || 20;
   const [page, setPage] = useState<number>(1);
-  const [pageCount, setPageCount] = useState<number>(1);
-  const [isLimit, setIsLimit] = useState<boolean>(false);
   const boxRef = createRef<any>();
   const watchRef = createRef<any>();
   const [lazyloadService, setLazyloadService] = useState<LazyloadService>();
   const { t } = useTranslation()
 
-  useEffect(() => {
-    if (htmlNodes && htmlNodes.length) {
-      const curretCount = Math.ceil(htmlNodes.length / pageSize);
-      if (curretCount <= page) {
-        setIsLimit(true);
-      }
-      else if (curretCount != pageCount) {
-        setPageCount(curretCount);
-        setIsLimit(false);
-      }
-    }
-  }, [htmlNodes, pageCount])
 
   useEffect(() => {
     let service: LazyloadService;
@@ -256,12 +242,18 @@ export default function BridgeCurrencyList({
     }
   }, []);
 
+  const [pageCount, isLimit] = useMemo(() => {
+    const count: any = Math.ceil(htmlNodes.length / pageSize) || 1;
+    const limit: any = page >= count;
+    return [count, limit];
+  }, [htmlNodes, pageSize, page]);
+
   useEffect(() => {
     let unsubscribe: Function;
     if (!isLimit && lazyloadService && watchRef.current) {
       unsubscribe = lazyloadService.subscribe(watchRef.current, (e: any) => {
-        if (e && e.intersectionRatio) {
-          page < pageCount ? setPage(page + 1) : setIsLimit(true);
+        if (e && e.intersectionRatio && page < pageCount) {
+          setPage(page + 1);
         }
       })
     }
@@ -274,7 +266,7 @@ export default function BridgeCurrencyList({
 
   const currentHtmlNodes = useMemo(() => {
     return htmlNodes ? htmlNodes.slice(0, page * pageSize) : htmlNodes;
-  }, [htmlNodes, page, pageCount]);
+  }, [htmlNodes, page, pageSize]);
 
   return (
     <>
