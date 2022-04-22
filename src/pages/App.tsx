@@ -9,6 +9,7 @@ import Popups from '../components/Popups'
 import Web3ReactManager from '../components/Web3ReactManager'
 import TxnsDtilsModal from '../components/CrossChainPanelV2/txnsDtilsModal'
 import TxnsErrorTipModal from '../components/CrossChainPanelV2/txnsErrorTipModal'
+import Lazyload from '../components/Lazyload/Lazyload'
 // import Pool from './Pool'
 // import Bridge from './Bridge'
 import Dashboard from './Dashboard'
@@ -16,12 +17,15 @@ import Dashboard from './Dashboard'
 import CrossChain from './CrossChain'
 import Bridge from './Bridge'
 
-import MergeCrossChainV2 from './MergeCrossChainV2'
+// import MergeCrossChainV2 from './MergeCrossChainV2'
+const MergeCrossChainV2 = Lazyload(() => import('./MergeCrossChainV2'))
 import Pools from './Pools'
-import PoolList from './Pools/poolList'
+// import PoolList from './Pools/poolList'
+const PoolList = Lazyload(() => import('./Pools/poolList'))
 import CrossChainTxns from './CrossChainTxns'
 import CrossNFT from './CroseNFT'
-import SwapMULTI from './SwapMULTI'
+// import SwapMULTI from './SwapMULTI'
+const SwapMULTI = Lazyload(() => import('./SwapMULTI'))
 import Vest from './Vest'
 import CreateLock from './Vest/create'
 import MangerVest from './Vest/manger'
@@ -38,37 +42,6 @@ import QueryNonApprove from '../components/NonApprove/queryIsNeedNonApprove'
 
 import config from '../config'
 import farmlist from '../config/farmlist'
-
-import { HashRouter } from 'react-router-dom'
-import { createWeb3ReactRoot, Web3ReactProvider } from '@web3-react/core'
-import { NetworkContextName } from '../constants'
-import getLibrary from '../utils/getLibrary'
-
-import { WalletProvider, NetworkInfo } from '@terra-money/wallet-provider'
-import { Updaters } from '../state/updaters'
-
-const Web3ProviderNetwork = createWeb3ReactRoot(NetworkContextName)
-
-if ('ethereum' in window) {
-  ;(window.ethereum as any).autoRefreshOnNetworkChange = false
-}
-
-const mainnet = {
-  name: 'mainnet',
-  chainID: 'columbus-4',
-  lcd: 'https://lcd.terra.dev',
-};
-
-const testnet = {
-  name: 'testnet',
-  chainID: 'tequila-0004',
-  lcd: 'https://tequila-lcd.terra.dev',
-};
-
-const walletConnectChainIds: Record<number, NetworkInfo> = {
-  0: testnet,
-  1: mainnet,
-}
 
 // import '../hooks/xrp'
 
@@ -167,7 +140,7 @@ const Marginer = styled.div`
 //   return <AddressClaimModal isOpen={open} onDismiss={toggle} />
 // }
 
-export function App() {
+export default function App() {
   let initUrl = '/dashboard'
   if (config.getCurConfigInfo().isOpenRouter) {
     initUrl = '/v1/router'
@@ -198,13 +171,13 @@ export function App() {
           <Web3ReactManager>
             <Switch>
               <Route exact strict path="/dashboard" component={() => <Dashboard />} />
-              <Route exact strict path="/pool" component={() => <PoolList />} />
+              <Route exact strict path="/pool" component={() => <PoolList  duration={ 0 } />} />
               <Route exact strict path="/pool/add" component={() => <Pools />} />
               <Route exact strict path="/farm" component={() => <FarmList />} />
               <Route exact strict path="/nft" component={() => <CrossNFT />} />
               <Route exact strict path="/cross-chain-txns" component={() => <CrossChainTxns />} />
               <Route exact strict path="/bridge" component={() => <Bridge />} />
-              <Route exact strict path="/multi" component={() => <SwapMULTI />} />
+              <Route exact strict path="/multi" component={() => <SwapMULTI duration={ 0 } />} />
               <Route exact strict path="/history" component={() => <HistoryList />} />
               <Route exact strict path="/history/details" component={() => <HistoryDetails />} />
               <Route exact strict path="/approvals" component={() => <QueryNonApprove />} />
@@ -217,7 +190,7 @@ export function App() {
                 path={[
                   '/router'
                 ]}
-                component={() => <MergeCrossChainV2 />}
+                component={() => <MergeCrossChainV2 duration={ 0 } />}
               />
               {
                 Object.keys(farmlist).map((key, index) => {
@@ -242,20 +215,4 @@ export function App() {
       </AppWrapper>
     </Suspense>
   )
-}
-
-export default function AppContainer() {
-  return (<WalletProvider
-    defaultNetwork={mainnet}
-    walletConnectChainIds={walletConnectChainIds}
-  >
-    <Web3ReactProvider getLibrary={getLibrary}>
-      <Web3ProviderNetwork getLibrary={getLibrary}>
-        <Updaters />
-        <HashRouter>
-          <App />
-        </HashRouter>
-      </Web3ProviderNetwork>
-    </Web3ReactProvider>
-  </WalletProvider>)
 }
