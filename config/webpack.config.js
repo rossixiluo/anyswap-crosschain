@@ -281,10 +281,11 @@ module.exports = function(webpackEnv) {
         minSize: 4096,
         cacheGroups: {
           common: {
-            test: /@terra-money|@terra-dev|@ethersproject|@walletconnect|@multichain-bridge|bip39|bn.js/,
+            // test: /@terra-money|@terra-dev|@ethersproject|@walletconnect|@multichain-bridge|bip39|bn.js/,
+            test: /@terra-money|@terra-dev|@ethersproject|raphael|idna-uts64-hx|ellptic|nebulas|lodash|@walletconnect|bip39/,
             name: "common",
             priority: 20,
-          }
+          },
         }
       },
       // Keep the runtime chunk separated to enable long term caching
@@ -319,6 +320,11 @@ module.exports = function(webpackEnv) {
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
           'scheduler/tracing': 'scheduler/tracing-profiling',
+        }),
+        ...(isEnvProduction && {
+          'multichain-bridge': path.resolve(__dirname, '../src/components/MultichainBridge'),
+          '@ethersproject/signing-key': path.resolve(__dirname, '../node_modules/@ethersproject/signing-key'),
+          'bn.js': path.resolve(__dirname, '../node_modules/bn.js')
         }),
         ...(modules.webpackAliases || {}),
       },
