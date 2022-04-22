@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useCallback,RefObject } from 'react'
+import React, { useMemo, useState, useRef, useCallback, RefObject, useEffect, createRef } from 'react'
 // import React, { useState, useEffect } from 'react'
 // import { createBrowserHistory } from 'history'
 import styled from 'styled-components'
@@ -13,6 +13,7 @@ import Loader from '../Loader'
 import Column from '../Column'
 import { RowBetween } from '../Row'
 import { PaddedColumn, SearchInput, Separator } from '../SearchModal/styleds'
+import LazyloadService from '../../components/Lazyload/LazyloadService'
 
 // import { useActiveWeb3React } from '../../hooks'
 import {useActiveReact} from '../../hooks/useActiveReact'
@@ -285,6 +286,11 @@ const Input = styled.input`
   }
 `
 
+const Tips = styled.div`
+  line-height: 56px;
+  text-align: center;
+`
+
 const Web3 = require('web3')
 
 function isConnect (rpc:string) {
@@ -413,18 +419,76 @@ function ChainListBox ({
   height,
   useChainId,
   openUrl,
-  searchQuery
+  searchQuery,
+  size
 }: {
   height: number
   useChainId: any
   openUrl: (value:any) => void
   searchQuery: any
+  size?: number
 }) {
+  const pageSize = size || 20;
+  const [page, setPage] = useState<number>(1);
+  const [pageCount, setPageCount] = useState<number>(1);
+  const [isLimit, setIsLimit] = useState<boolean>(false);
+  const boxRef = createRef<any>();
+  const watchRef = createRef<any>();
+  const [lazyloadService, setLazyloadService] = useState<LazyloadService>();
+  const { t } = useTranslation()
+
+  useEffect(() => {
+    if (spportChainArr && spportChainArr.length) {
+      const curretCount = Math.ceil(spportChainArr.length / pageSize);
+      if (curretCount <= page) {
+        setIsLimit(true);
+      }
+      else if (curretCount != pageCount) {
+        setPageCount(curretCount);
+        setIsLimit(false);
+      }
+    }
+  }, [spportChainArr])
+
+  useEffect(() => {
+    let service: LazyloadService;
+    if (boxRef.current) {
+      service = LazyloadService.createElementObserve(boxRef.current);
+      setLazyloadService(service);
+    }
+    return () => {
+      if (service) {
+        service.disconnect();
+        setLazyloadService(undefined);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    let unsubscribe: Function;
+    if (!isLimit && lazyloadService && watchRef.current) {
+      unsubscribe = lazyloadService.subscribe(watchRef.current, (e: any) => {
+        if (e && e.intersectionRatio) {
+          page < pageCount ? setPage(page + 1) : setIsLimit(true);
+        }
+      })
+    }
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    }
+  }, [lazyloadService, page, pageCount, isLimit]);
+
+  const currentSpportChainArr = useMemo(() => {
+    return spportChainArr ? spportChainArr.slice(0, page * pageSize) : spportChainArr
+  }, [spportChainArr, page, pageSize]);
+
   return (
     <>
-      <NetWorkList style={{height: height}}>
+      <NetWorkList ref={ boxRef } style={{height: height}}>
         {
-          spportChainArr && spportChainArr.map((item:any, index:any) => {
+          spportChainArr && currentSpportChainArr.map((item:any, index:any) => {
             if (
               (searchQuery
               && (
@@ -444,6 +508,7 @@ function ChainListBox ({
             return
           })
         }
+        { !isLimit ? <Tips ref={ watchRef }>{ t('Loading') }...</Tips> : null }
       </NetWorkList>
     </>
   )

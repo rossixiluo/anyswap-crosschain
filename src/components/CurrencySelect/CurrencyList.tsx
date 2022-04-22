@@ -1,8 +1,9 @@
 import { Currency, CurrencyAmount, currencyEquals, ETHER, Token } from 'anyswap-sdk'
 // import { Currency, CurrencyAmount, ETHER, Token } from 'anyswap-sdk'
-import React, { CSSProperties, useMemo } from 'react'
+import React, { CSSProperties, useMemo, useState, useEffect, createRef } from 'react'
 import { Text } from 'rebass'
 import styled from 'styled-components'
+import { useTranslation } from 'react-i18next'
 
 import { useActiveWeb3React } from '../../hooks'
 import { useLocalToken } from '../../hooks/Tokens'
@@ -18,6 +19,7 @@ import Loader from '../Loader'
 
 import config from '../../config'
 import {CROSS_BRIDGE_LIST} from '../../config/constant'
+import LazyloadService from '../../components/Lazyload/LazyloadService'
 
 function currencyKey(currency: Currency): string {
   return currency instanceof Token ? currency.address : currency === ETHER ? 'ETHER' : ''
@@ -46,6 +48,11 @@ const Tag = styled.div`
 
 const ListBox = styled.div`
   overflow:auto;
+`
+
+const Tips = styled.div`
+  line-height: 56px;
+  text-align: center;
 `
 
 // function Balance({ balance }: { balance: CurrencyAmount }) {
@@ -171,7 +178,8 @@ export default function BridgeCurrencyList({
   showETH,
   allBalances,
   bridgeKey,
-  selectDestChainId
+  selectDestChainId,
+  size
 }: {
   height: number
   currencies: Currency[]
@@ -183,6 +191,7 @@ export default function BridgeCurrencyList({
   allBalances?: any
   bridgeKey?: any
   selectDestChainId?: any
+  size?: number
 }) {
   const { account, chainId } = useActiveWeb3React()
   const itemData = useMemo(() => (showETH ? [Currency.ETHER, ...currencies] : currencies), [currencies, showETH])
@@ -210,12 +219,69 @@ export default function BridgeCurrencyList({
     }
     return arr
   }, [itemData, chainId])
+
+  const pageSize = size || 20;
+  const [page, setPage] = useState<number>(1);
+  const [pageCount, setPageCount] = useState<number>(1);
+  const [isLimit, setIsLimit] = useState<boolean>(false);
+  const boxRef = createRef<any>();
+  const watchRef = createRef<any>();
+  const [lazyloadService, setLazyloadService] = useState<LazyloadService>();
+  const { t } = useTranslation()
+
+  useEffect(() => {
+    if (htmlNodes && htmlNodes.length) {
+      const curretCount = Math.ceil(htmlNodes.length / pageSize);
+      if (curretCount <= page) {
+        setIsLimit(true);
+      }
+      else if (curretCount != pageCount) {
+        setPageCount(curretCount);
+        setIsLimit(false);
+      }
+    }
+  }, [htmlNodes, pageCount])
+
+  useEffect(() => {
+    let service: LazyloadService;
+    if (boxRef.current) {
+      service = LazyloadService.createElementObserve(boxRef.current);
+      setLazyloadService(service);
+    }
+    return () => {
+      if (service) {
+        service.disconnect();
+        setLazyloadService(undefined);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    let unsubscribe: Function;
+    if (!isLimit && lazyloadService && watchRef.current) {
+      unsubscribe = lazyloadService.subscribe(watchRef.current, (e: any) => {
+        if (e && e.intersectionRatio) {
+          page < pageCount ? setPage(page + 1) : setIsLimit(true);
+        }
+      })
+    }
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    }
+  }, [lazyloadService, page, pageCount, isLimit]);
+
+  const currentHtmlNodes = useMemo(() => {
+    return htmlNodes ? htmlNodes.slice(0, page * pageSize) : htmlNodes;
+  }, [htmlNodes, page, pageCount]);
+
   return (
     <>
-      <ListBox style={{height: height}}>
+      <ListBox ref={ boxRef } style={{height: height}}>
         {
-          htmlNodes.map((item, index) => {
-            const currency: Currency = item
+          currentHtmlNodes.map((item, index) => {
+            const currency: any = item
             // const isSelected = Boolean(selectedCurrency && currencyEquals(selectedCurrency, currency))
             const otherSelected = Boolean(otherCurrency && currencyEquals(otherCurrency, currency))
             const isSelected = Boolean(selectedCurrency?.address?.toLowerCase() === currency?.address?.toLowerCase())
@@ -236,6 +302,7 @@ export default function BridgeCurrencyList({
             )
           })
         }
+        { !isLimit ? <Tips ref={ watchRef }>{ t('Loading') }...</Tips> : null }
       </ListBox>
     </>
   )
