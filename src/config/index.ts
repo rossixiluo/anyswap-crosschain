@@ -27,6 +27,7 @@ const config: ConFig = {
   env,
   version,
   ENV_NODE_CONFIG,
+  defaultChainId: 1,
   chainInfo,
   bridgeApi,
   explorer,

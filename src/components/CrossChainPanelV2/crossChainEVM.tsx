@@ -70,7 +70,15 @@ export default function CrossChain({
 }) {
   // const { account, chainId, library } = useActiveWeb3React()
   // const { account, chainId } = useActiveWeb3React()
-  const { chainId, evmAccount } = useActiveReact()
+  const { chainId: activeChainId, evmAccount } = useActiveReact()
+
+  const { triedEager: isLoaded } = useContext(Web3ReactConnectContext);
+  const defaultChainId = config.defaultChainId;
+
+  const chainId = useMemo(() => {
+    return isLoaded ? activeChainId : activeChainId || defaultChainId
+  }, [activeChainId, isLoaded, defaultChainId])
+
   const { t } = useTranslation()
   const connectedWallet = useConnectedWallet()
 
@@ -111,8 +119,6 @@ export default function CrossChain({
 
   let initBridgeToken:any = getParams('bridgetoken') ? getParams('bridgetoken') : ''
   initBridgeToken = initBridgeToken ? initBridgeToken.toLowerCase() : ''
-
-  const { triedEager: isLoaded } = useContext(Web3ReactConnectContext);
 
   const destConfig = useMemo(() => {
     if (selectDestCurrency) {
