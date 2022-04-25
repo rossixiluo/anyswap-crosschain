@@ -37,6 +37,7 @@ import {selectNetwork} from '../../config/tools/methods'
 import { ChainId } from '../../config/chainConfig/chainId'
 
 import {getNodeTotalsupply} from '../../utils/bridge/getBalanceV2'
+import {getStorageWithCache, setStorageWithCache, STORAGE_CACHE_MINUTE} from '../../utils/storage'
 // import {formatDecimal, thousandBit} from '../../utils/tools/tools'
 
 import TokenLogo from '../TokenLogo'
@@ -248,6 +249,21 @@ export default function CrossChain({
       }
     })
   }
+
+  useEffect(() => {
+    setStorageWithCache('selectCurrencyCache', {
+      selectCurrency: formatCurrency || formatCurrency,
+      chainId
+    })
+  }, [formatCurrency, selectCurrency, chainId])
+
+  const selectCurrencyCache = useMemo(() => {
+    if (!formatCurrency && !selectCurrency) {
+      const cacheData = getStorageWithCache('selectCurrencyCache', STORAGE_CACHE_MINUTE * 30);
+      return cacheData.chainId == chainId ? cacheData.selectCurrency : null;
+    }
+    return null;
+  }, [formatCurrency, selectCurrency, chainId])
 
   useEffect(() => {
     setDestChain('')
@@ -751,7 +767,7 @@ export default function CrossChain({
           onMax={(value) => {
             handleMaxInput(value)
           }}
-          currency={formatCurrency ? formatCurrency : selectCurrency}
+          currency={selectCurrencyCache || formatCurrency || selectCurrency}
           disableCurrencySelect={false}
           showMaxButton={true}
           isViewNetwork={true}
