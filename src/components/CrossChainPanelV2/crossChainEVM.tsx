@@ -76,7 +76,7 @@ export default function CrossChain({
   const defaultChainId = config.defaultChainId;
 
   const chainId = useMemo(() => {
-    return isLoaded ? activeChainId : activeChainId || defaultChainId
+    return activeChainId || getStorageWithCache('chainId', STORAGE_CACHE_MINUTE * 30) || defaultChainId
   }, [activeChainId, isLoaded, defaultChainId])
 
   const { t } = useTranslation()
