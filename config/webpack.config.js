@@ -323,7 +323,6 @@ module.exports = function(webpackEnv) {
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
         ...(isEnvProduction && {
-          // 'multichain-bridge': path.resolve(__dirname, '../src/components/MultichainBridge'),
           // '@ethersproject/signing-key': path.resolve(__dirname, '../node_modules/@ethersproject/signing-key'),
           'bn.js': path.resolve(__dirname, '../node_modules/bn.js')
         }),
