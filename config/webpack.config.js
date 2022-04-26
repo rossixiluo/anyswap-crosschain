@@ -29,7 +29,8 @@ const postcssNormalize = require('postcss-normalize');
 const appPackageJson = require(paths.appPackageJson);
 
 const UglifyJsPlugin=require('uglifyjs-webpack-plugin')
-const CompressionPlugin = require("compression-webpack-plugin")
+const CompressionPlugin = require('compression-webpack-plugin')
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
@@ -61,8 +62,8 @@ module.exports = function(webpackEnv) {
 
   // Variable used for enabling profiling in Production
   // passed into alias object. Uses a flag if passed into the build command
-  const isEnvProductionProfile =
-    isEnvProduction && process.argv.includes('--profile');
+  const isEnvProductionProfile = isEnvProduction && process.argv.includes('--profile');
+  const isEnvProductionAanlyzer = isEnvProduction && process.argv.includes('--analyzer');
 
   // We will provide `paths.publicUrlOrPath` to our app
   // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
@@ -281,8 +282,8 @@ module.exports = function(webpackEnv) {
         minSize: 4096,
         cacheGroups: {
           common: {
-            // test: /@terra-money|@terra-dev|@ethersproject|@walletconnect|@multichain-bridge|bip39|bn.js/,
-            test: /@terra-money|@terra-dev|@ethersproject|raphael|idna-uts64-hx|ellptic|nebulas|lodash|@walletconnect|bip39/,
+            test: /@ethereumjs|@terra-money|@terra-dev|@ethersproject|bip39|bn.js/,
+            // test: /@terra-money|@terra-dev|@ethersproject|raphael|idna-uts64-hx|ellptic|nebulas|lodash|@walletconnect|bip39/,
             name: "common",
             priority: 20,
           },
@@ -322,8 +323,8 @@ module.exports = function(webpackEnv) {
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
         ...(isEnvProduction && {
-          'multichain-bridge': path.resolve(__dirname, '../src/components/MultichainBridge'),
-          '@ethersproject/signing-key': path.resolve(__dirname, '../node_modules/@ethersproject/signing-key'),
+          // 'multichain-bridge': path.resolve(__dirname, '../src/components/MultichainBridge'),
+          // '@ethersproject/signing-key': path.resolve(__dirname, '../node_modules/@ethersproject/signing-key'),
           'bn.js': path.resolve(__dirname, '../node_modules/bn.js')
         }),
         ...(modules.webpackAliases || {}),
@@ -659,6 +660,7 @@ module.exports = function(webpackEnv) {
             new RegExp('/[^/?]+\\.[^/]+$'),
           ],
         }),
+      isEnvProductionAanlyzer && new BundleAnalyzerPlugin(),
       // TypeScript type checking
       useTypeScript &&
         new ForkTsCheckerWebpackPlugin({
