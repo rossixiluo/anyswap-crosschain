@@ -260,7 +260,7 @@ export default function CrossChain({
   const selectCurrencyCache = useMemo(() => {
     if (!formatCurrency && !selectCurrency) {
       const cacheData = getStorageWithCache('selectCurrencyCache', STORAGE_CACHE_MINUTE * 30);
-      return cacheData.chainId == chainId ? cacheData.selectCurrency : null;
+      return cacheData && cacheData.chainId == chainId ? cacheData.selectCurrency : null;
     }
     return null;
   }, [formatCurrency, selectCurrency, chainId])
