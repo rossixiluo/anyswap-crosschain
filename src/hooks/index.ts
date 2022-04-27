@@ -1,5 +1,5 @@
-import { Web3Provider } from '@ethersproject/providers'
-import { ChainId } from 'anyswap-sdk'
+import type { Web3Provider } from '@ethersproject/providers'
+import type { ChainId } from 'anyswap-sdk'
 import { useWeb3React as useWeb3ReactCore } from '@web3-react/core'
 import { Web3ReactContextInterface } from '@web3-react/core/dist/types'
 import { useEffect, useState } from 'react'
@@ -7,6 +7,7 @@ import { isMobile } from 'react-device-detect'
 import { injected } from '../connectors'
 import { NetworkContextName } from '../constants'
 import { chainInfo } from '../config/chainConfig'
+import { setStorageWithCache } from '../utils/storage'
 import {
   ENV_NODE_CONFIG
 } from '../config/constant'
@@ -74,8 +75,10 @@ export function useInactiveListener(suppress = false) {
         // console.log(chainID)
         // console.log(parseInt(chainID))
         if (chainID) {
-          localStorage.setItem(ENV_NODE_CONFIG, chainInfo[parseInt(chainID)].label)
-          history.go(0)
+          const currentChain = chainInfo[parseInt(chainID)]
+          setStorageWithCache('chainId', currentChain.chainID)
+          localStorage.setItem(ENV_NODE_CONFIG, currentChain.label)
+          setTimeout(() => history.go(0), 0)
         }
         // eat errors
         activate(injected, undefined, true).catch(error => {

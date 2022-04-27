@@ -1,3 +1,4 @@
+import { setStorageWithCache } from '../../utils/storage'
 import { chainInfo } from '../chainConfig'
 import {
   ENV_NODE_CONFIG
@@ -35,8 +36,10 @@ export function selectNetwork (chainID:any) {
       ethereumFN.request(data).then((res: any) => {
         // console.log(chainID)
         console.log(res)
+        const chainItem = chainInfo[chainID]
+        setStorageWithCache('chainId', chainItem.chainID)
         // localStorage.setItem(ENV_NODE_CONFIG, chainInfo[chainID].label)
-        history.go(0)
+        setTimeout(() => history.go(0), 0)
         resolve({
           msg: 'Success'
         })
