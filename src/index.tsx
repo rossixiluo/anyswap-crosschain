@@ -1,5 +1,5 @@
 import 'inter-ui'
-import React, { Suspense } from 'react'
+import React, { StrictMode } from 'react'
 // import { isMobile } from 'react-device-detect'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
@@ -11,17 +11,15 @@ import AppContainer from './pages/AppContainer'
 import './assets/css/index.scss'
 
 ReactDOM.render(
+  <StrictMode>
   <Provider store={store}>
     <FixedGlobalStyle />
     <ThemeProvider>
       <ThemeGlobalClassName />
       <ThemedGlobalStyle />
-      {/* <StrictMode> */}
-      <Suspense fallback={ null }>
         <AppContainer />
-      </Suspense>
-      {/* </StrictMode> */}
     </ThemeProvider>
-  </Provider>,
+  </Provider>
+  </StrictMode>,
   document.getElementById('root')
 )
