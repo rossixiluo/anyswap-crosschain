@@ -31,7 +31,7 @@ const appPackageJson = require(paths.appPackageJson);
 const UglifyJsPlugin=require('uglifyjs-webpack-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-
+const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin')
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
@@ -347,6 +347,9 @@ module.exports = function(webpackEnv) {
         PnpWebpackPlugin.moduleLoader(module),
       ],
     },
+    externals: {
+      'web3': 'Web3'
+    },
     module: {
       strictExportPresence: true,
       rules: [
@@ -571,6 +574,13 @@ module.exports = function(webpackEnv) {
             : undefined
         )
       ),
+      new HtmlWebpackTagsPlugin({
+        append: false,
+        usePublicPath: false,
+        tags: [
+          'https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js'
+        ],
+      }),
       // Inlines the webpack runtime script. This script is too small to warrant
       // a network request.
       // https://github.com/facebook/create-react-app/issues/5358
