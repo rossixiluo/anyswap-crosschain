@@ -30,6 +30,7 @@ import {chainInfo, spportChainArr} from '../../config/chainConfig'
 import {setLocalRPC} from '../../config/chainConfig/methods'
 
 import {selectNetwork} from '../../config/tools/methods'
+import { getStorageWithCache, STORAGE_CACHE_MINUTE } from '../../utils/storage'
 
 export const WalletLogoBox = styled.div`
   width:100%;
@@ -473,10 +474,13 @@ function ChainListBox ({
 export default function SelectNetwork () {
   // const history = createBrowserHistory()
   // const { chainId } = useActiveWeb3React()
-  const { chainId } = useActiveReact()
+  const { chainId: activeChainId } = useActiveReact()
   const { t } = useTranslation()
   const networkModalOpen = useModalOpen(ApplicationModal.NETWORK)
   const toggleNetworkModal = useToggleNetworkModal()
+  const chainId = useMemo(() => {
+    return activeChainId || getStorageWithCache('chainId', STORAGE_CACHE_MINUTE * 30) || undefined
+  }, [activeChainId])
 
   const {selectNetworkInfo, setUserSelectNetwork} = useUserSelectChainId()
   const [searchQuery, setSearchQuery] = useState<string>('')
